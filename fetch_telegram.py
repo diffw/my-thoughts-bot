@@ -54,17 +54,16 @@ def fetch_messages():
         if not msg:
             continue
 
-    user_id = str(msg.get("from", {}).get("id"))
-    text = msg.get("text")
-    timestamp = datetime.utcfromtimestamp(msg["date"]).strftime("%Y-%m-%d %H:%M:%S")
-    
-    print("🔍 收到来自用户 ID 的消息:", user_id, text)
-    
-    if user_id == TELEGRAM_USER_ID and text:
-        post = {"timestamp": timestamp, "text": text}
-        if (timestamp, text) not in seen:
-            new_posts.append(post)
+        user_id = str(msg.get("from", {}).get("id"))
+        text = msg.get("text")
+        timestamp = datetime.utcfromtimestamp(msg["date"]).strftime("%Y-%m-%d %H:%M:%S")
 
+        print("🔍 收到来自用户 ID 的消息:", user_id, text)
+
+        if user_id == TELEGRAM_USER_ID and text:
+            post = {"timestamp": timestamp, "text": text}
+            if (timestamp, text) not in seen:
+                new_posts.append(post)
 
         max_update_id = max(max_update_id, update["update_id"])
 
