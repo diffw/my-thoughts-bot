@@ -1,0 +1,32 @@
+name: Update Posts
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+
+      - name: Install requests (if needed)
+        run: pip install requests
+
+      - name: Run update script
+        run: python update.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add posts.json
+          git diff --cached --quiet || git commit -m "Update posts.json"
+          git push
