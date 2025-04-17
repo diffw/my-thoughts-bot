@@ -4,12 +4,11 @@ import os
 from datetime import datetime
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
-TELEGRAM_USER_ID = "5090028387"  # 你的 Telegram 用户 ID（待确认）
+TELEGRAM_USER_ID = "5090028387"  # ⛳️ 待确认的 Telegram 用户 ID
 POSTS_FILE = "posts.json"
 OFFSET_FILE = "last_update_id.txt"
 
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
-
 
 def load_offset():
     if os.path.exists(OFFSET_FILE):
@@ -17,11 +16,9 @@ def load_offset():
             return int(f.read().strip())
     return None
 
-
 def save_offset(offset):
     with open(OFFSET_FILE, "w") as f:
         f.write(str(offset))
-
 
 def load_posts():
     try:
@@ -30,11 +27,9 @@ def load_posts():
     except:
         return []
 
-
 def save_posts(posts):
     with open(POSTS_FILE, "w", encoding="utf-8") as f:
         json.dump(posts, f, ensure_ascii=False, indent=2)
-
 
 def fetch_messages():
     posts = load_posts()
@@ -50,7 +45,6 @@ def fetch_messages():
     max_update_id = offset or 0
 
     for update in updates:
-        print("📦 update 原始内容:", json.dumps(update, ensure_ascii=False), flush=True)
         msg = update.get("message")
         if not msg:
             continue
@@ -59,7 +53,8 @@ def fetch_messages():
         text = msg.get("text")
         timestamp = datetime.utcfromtimestamp(msg["date"]).strftime("%Y-%m-%d %H:%M:%S")
 
-        print("🔍 收到来自用户 ID 的消息:", user_id, text, flush=True)
+        # ✅ 打印出来每一条消息的来源用户 ID 和内容
+        print("👤 收到用户 ID:", user_id, "| 内容:", text, flush=True)
 
         if user_id == TELEGRAM_USER_ID and text:
             post = {"timestamp": timestamp, "text": text}
@@ -74,8 +69,7 @@ def fetch_messages():
         save_posts(posts)
 
     save_offset(max_update_id)
-    print(f"✅ 新增 {len(new_posts)} 条消息")
-
+    print(f"✅ 新增 {len(new_posts)} 条消息", flush=True)
 
 if __name__ == "__main__":
     fetch_messages()
