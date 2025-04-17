@@ -34,7 +34,7 @@
       .then((posts) => {
         const container = document.getElementById("feed");
         container.innerHTML = "";
-        posts.forEach(({ timestamp, text }) => {
+        posts.reverse().forEach(({ timestamp, text }) => {
           const div = document.createElement("div");
           div.className = "post";
           div.innerHTML = `<div class="timestamp">${timestamp}</div><div>${text}</div>`;
