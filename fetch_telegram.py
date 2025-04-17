@@ -6,10 +6,10 @@ from pytz import timezone
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 POSTS_FILE = "posts.json"
-OFFSET_FILE = "offset.txt"  # 用于记录上一次处理到哪个 update_id
+SEEN_FILE = "seen_update_ids.txt"  # 每个 update_id 只处理一次
 
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
-central_tz = timezone("America/Chicago")  # 达拉斯时间 CST/CDT 自动转换
+central_tz = timezone("America/Chicago")
 
 def load_posts():
     try:
@@ -22,57 +22,57 @@ def save_posts(posts):
     with open(POSTS_FILE, "w", encoding="utf-8") as f:
         json.dump(posts, f, indent=2, ensure_ascii=False)
 
-def load_offset():
+def load_seen_ids():
     try:
-        with open(OFFSET_FILE, "r") as f:
-            return int(f.read().strip())
+        with open(SEEN_FILE, "r") as f:
+            return set(map(int, f.read().splitlines()))
     except:
-        return 0
+        return set()
 
-def save_offset(offset):
-    with open(OFFSET_FILE, "w") as f:
-        f.write(str(offset))
+def save_seen_ids(seen_ids):
+    with open(SEEN_FILE, "w") as f:
+        f.write("\n".join(map(str, sorted(seen_ids))))
 
 def fetch_messages():
     posts = load_posts()
-    seen_ids = {p.get("id") for p in posts if "id" in p}
-    offset = load_offset()
+    seen_message_ids = {p["id"] for p in posts}
+    seen_update_ids = load_seen_ids()
 
-    # 每次只获取从 offset 之后的消息
-    res = requests.get(API_URL, params={"offset": offset + 1}).json()
+    res = requests.get(API_URL).json()
     updates = res.get("result", [])
     new_posts = []
 
     for update in updates:
-        print("📦 update 原始内容:", json.dumps(update, ensure_ascii=False), flush=True)
+        update_id = update.get("update_id")
+        if update_id in seen_update_ids:
+            continue  # 已处理过
 
         msg = update.get("message")
         if not msg:
+            seen_update_ids.add(update_id)
             continue
 
         message_id = msg.get("message_id")
-        update_id = update.get("update_id")
         user_id = str(msg.get("from", {}).get("id"))
         text = msg.get("text")
         timestamp = datetime.fromtimestamp(msg["date"], tz=central_tz).strftime("%Y-%m-%d")
 
-        print("🔍 收到来自用户 ID 的消息:", user_id, text, flush=True)
+        print("📦 收到消息:", json.dumps(update, ensure_ascii=False), flush=True)
 
-        if text and message_id not in seen_ids:
+        if text and message_id not in seen_message_ids:
             post = {"id": message_id, "timestamp": timestamp, "text": text}
             new_posts.append(post)
 
-        # 更新 offset，即使没有新消息也要记录 update_id，避免重复拉取
-        offset = max(offset, update_id)
+        seen_update_ids.add(update_id)  # 无论是否录用，都记为已处理
 
     if new_posts:
         posts.extend(new_posts)
         posts.sort(key=lambda x: (x["timestamp"], x["id"]), reverse=True)
         save_posts(posts)
 
-    save_offset(offset)
+    save_seen_ids(seen_update_ids)
 
-    print(f"✅ 新增 {len(new_posts)} 条消息", flush=True)
+    print(f"✅ 本次新增 {len(new_posts)} 条消息", flush=True)
 
 if __name__ == "__main__":
     fetch_messages()
