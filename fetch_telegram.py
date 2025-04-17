@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
-TELEGRAM_USER_ID = "5090028387"  # ⛳️ 请替换为你自己的用户 ID
 POSTS_FILE = "posts.json"
 OFFSET_FILE = "last_update_id.txt"
 
@@ -57,8 +56,8 @@ def fetch_messages():
 
         print("🔍 收到来自用户 ID 的消息:", user_id, text, flush=True)
 
-        # ✅ 如果你确定 user_id 是你自己的，可以启用下面这一行替代 if text:
-        if user_id == TELEGRAM_USER_ID and text:
+        # ✅ 所有人发的文字消息都会记录
+        if text:
             post = {"timestamp": timestamp, "text": text}
             if (timestamp, text) not in seen:
                 new_posts.append(post)
