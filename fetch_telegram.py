@@ -6,9 +6,10 @@ from pytz import timezone
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 POSTS_FILE = "posts.json"
+OFFSET_FILE = "offset.txt"  # 用于记录上一次处理到哪个 update_id
 
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
-central_tz = timezone("America/Chicago")  # 🕘 达拉斯时间 CST/CDT 自动转换
+central_tz = timezone("America/Chicago")  # 达拉斯时间 CST/CDT 自动转换
 
 def load_posts():
     try:
@@ -21,11 +22,24 @@ def save_posts(posts):
     with open(POSTS_FILE, "w", encoding="utf-8") as f:
         json.dump(posts, f, indent=2, ensure_ascii=False)
 
+def load_offset():
+    try:
+        with open(OFFSET_FILE, "r") as f:
+            return int(f.read().strip())
+    except:
+        return 0
+
+def save_offset(offset):
+    with open(OFFSET_FILE, "w") as f:
+        f.write(str(offset))
+
 def fetch_messages():
     posts = load_posts()
     seen_ids = {p.get("id") for p in posts if "id" in p}
+    offset = load_offset()
 
-    res = requests.get(API_URL).json()
+    # 每次只获取从 offset 之后的消息
+    res = requests.get(API_URL, params={"offset": offset + 1}).json()
     updates = res.get("result", [])
     new_posts = []
 
@@ -37,6 +51,7 @@ def fetch_messages():
             continue
 
         message_id = msg.get("message_id")
+        update_id = update.get("update_id")
         user_id = str(msg.get("from", {}).get("id"))
         text = msg.get("text")
         timestamp = datetime.fromtimestamp(msg["date"], tz=central_tz).strftime("%Y-%m-%d")
@@ -47,11 +62,15 @@ def fetch_messages():
             post = {"id": message_id, "timestamp": timestamp, "text": text}
             new_posts.append(post)
 
+        # 更新 offset，即使没有新消息也要记录 update_id，避免重复拉取
+        offset = max(offset, update_id)
+
     if new_posts:
         posts.extend(new_posts)
-        # ✅ 使用 fallback 的方式排序，避免老数据没有 id 报错
-        posts.sort(key=lambda x: (x["timestamp"], x.get("id", 0)), reverse=True)
+        posts.sort(key=lambda x: (x["timestamp"], x["id"]), reverse=True)
         save_posts(posts)
+
+    save_offset(offset)
 
     print(f"✅ 新增 {len(new_posts)} 条消息", flush=True)
 
