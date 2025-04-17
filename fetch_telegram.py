@@ -56,6 +56,8 @@ def fetch_messages():
 
         user_id = str(msg.get("from", {}).get("id"))
         text = msg.get("text")
+        print("收到用户 ID：", user_id)
+        print("消息内容：", text)
         timestamp = datetime.utcfromtimestamp(msg["date"]).strftime("%Y-%m-%d %H:%M:%S")
 
         if user_id == TELEGRAM_USER_ID and text:
