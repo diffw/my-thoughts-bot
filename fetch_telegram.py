@@ -3,12 +3,13 @@ import json
 import os
 from datetime import datetime
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8086705781:AAHZNKjhaJv6f02G2Wiq5OZHjql9u978MXk")
-TELEGRAM_USER_ID = "5090028387"
+BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
+TELEGRAM_USER_ID = "5090028387"  # 你的 Telegram 用户 ID
 POSTS_FILE = "posts.json"
 OFFSET_FILE = "last_update_id.txt"
 
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
+
 
 def load_offset():
     if os.path.exists(OFFSET_FILE):
@@ -16,9 +17,11 @@ def load_offset():
             return int(f.read().strip())
     return None
 
+
 def save_offset(offset):
     with open(OFFSET_FILE, "w") as f:
         f.write(str(offset))
+
 
 def load_posts():
     try:
@@ -27,16 +30,18 @@ def load_posts():
     except:
         return []
 
+
 def save_posts(posts):
     with open(POSTS_FILE, "w", encoding="utf-8") as f:
         json.dump(posts, f, ensure_ascii=False, indent=2)
+
 
 def fetch_messages():
     posts = load_posts()
     seen = {(p["timestamp"], p["text"]) for p in posts}
 
     offset = load_offset()
-    params = {"offset": offset + 1} if offset else {}
+    params = {"offset": offset + 1} if offset is not None else {}
 
     res = requests.get(API_URL, params=params).json()
     updates = res.get("result", [])
@@ -52,13 +57,13 @@ def fetch_messages():
         user_id = str(msg.get("from", {}).get("id"))
         text = msg.get("text")
         timestamp = datetime.utcfromtimestamp(msg["date"]).strftime("%Y-%m-%d %H:%M:%S")
-        update_id = update["update_id"]
-        max_update_id = max(max_update_id, update_id)
 
         if user_id == TELEGRAM_USER_ID and text:
-            item = {"timestamp": timestamp, "text": text}
+            post = {"timestamp": timestamp, "text": text}
             if (timestamp, text) not in seen:
-                new_posts.append(item)
+                new_posts.append(post)
+
+        max_update_id = max(max_update_id, update["update_id"])
 
     if new_posts:
         posts.extend(new_posts)
@@ -66,6 +71,8 @@ def fetch_messages():
         save_posts(posts)
 
     save_offset(max_update_id)
+    print(f"✅ 新增 {len(new_posts)} 条消息")
+
 
 if __name__ == "__main__":
     fetch_messages()
