@@ -58,7 +58,7 @@ def fetch_messages():
         text = msg.get("text")
         timestamp = datetime.utcfromtimestamp(msg["date"]).strftime("%Y-%m-%d %H:%M:%S")
 
-        print("🔍 收到来自用户 ID 的消息:", user_id, text)
+        print("🔍 收到来自用户 ID 的消息:", user_id, text, flush=True)
 
         if user_id == TELEGRAM_USER_ID and text:
             post = {"timestamp": timestamp, "text": text}
