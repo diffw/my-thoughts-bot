@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
-TELEGRAM_USER_ID = "5090028387"  # 你的 Telegram 用户 ID
+TELEGRAM_USER_ID = "5090028387"  # 你的 Telegram 用户 ID（待确认）
 POSTS_FILE = "posts.json"
 OFFSET_FILE = "last_update_id.txt"
 
@@ -56,9 +56,10 @@ def fetch_messages():
 
         user_id = str(msg.get("from", {}).get("id"))
         text = msg.get("text")
-        print("收到用户 ID：", user_id)
-        print("消息内容：", text)
         timestamp = datetime.utcfromtimestamp(msg["date"]).strftime("%Y-%m-%d %H:%M:%S")
+
+        # ✅ 打印调试信息
+        print("👤 收到用户 ID:", user_id, "| 消息:", text)
 
         if user_id == TELEGRAM_USER_ID and text:
             post = {"timestamp": timestamp, "text": text}
