@@ -2,12 +2,15 @@ import requests
 import json
 import os
 from datetime import datetime
+from pytz import timezone
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 POSTS_FILE = "posts.json"
 OFFSET_FILE = "last_update_id.txt"
 
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
+
+central_tz = timezone("America/Chicago")  # 🕘 达拉斯本地时间
 
 def load_offset():
     if os.path.exists(OFFSET_FILE):
@@ -28,7 +31,7 @@ def load_posts():
 
 def save_posts(posts):
     with open(POSTS_FILE, "w", encoding="utf-8") as f:
-        json.dump(posts, f, ensure_ascii=False, indent=2)
+        json.dump(posts, f, indent=2, ensure_ascii=False)
 
 def fetch_messages():
     posts = load_posts()
@@ -52,11 +55,10 @@ def fetch_messages():
 
         user_id = str(msg.get("from", {}).get("id"))
         text = msg.get("text")
-        timestamp = datetime.utcfromtimestamp(msg["date"]).strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.fromtimestamp(msg["date"], tz=central_tz).strftime("%Y-%m-%d")  # ✅ 只显示日期
 
         print("🔍 收到来自用户 ID 的消息:", user_id, text, flush=True)
 
-        # ✅ 所有人发的文字消息都会记录
         if text:
             post = {"timestamp": timestamp, "text": text}
             if (timestamp, text) not in seen:
