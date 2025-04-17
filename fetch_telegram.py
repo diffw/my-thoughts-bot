@@ -6,20 +6,9 @@ from pytz import timezone
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 POSTS_FILE = "posts.json"
-OFFSET_FILE = "last_update_id.txt"
 
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
 central_tz = timezone("America/Chicago")  # 🕘 达拉斯时间 CST/CDT 自动转换
-
-def load_offset():
-    if os.path.exists(OFFSET_FILE):
-        with open(OFFSET_FILE, "r") as f:
-            return int(f.read().strip())
-    return None
-
-def save_offset(offset):
-    with open(OFFSET_FILE, "w") as f:
-        f.write(str(offset))
 
 def load_posts():
     try:
@@ -34,16 +23,11 @@ def save_posts(posts):
 
 def fetch_messages():
     posts = load_posts()
-    seen = {(p["timestamp"], p["text"]) for p in posts}
+    seen_ids = {p.get("id") for p in posts if "id" in p}
 
-    offset = load_offset()
-    params = {"offset": offset + 1} if offset is not None else {}
-
-    res = requests.get(API_URL, params=params).json()
+    res = requests.get(API_URL).json()
     updates = res.get("result", [])
     new_posts = []
-
-    max_update_id = offset or 0
 
     for update in updates:
         print("📦 update 原始内容:", json.dumps(update, ensure_ascii=False), flush=True)
@@ -52,25 +36,22 @@ def fetch_messages():
         if not msg:
             continue
 
+        message_id = msg.get("message_id")
         user_id = str(msg.get("from", {}).get("id"))
         text = msg.get("text")
-        timestamp = datetime.fromtimestamp(msg["date"], tz=central_tz).strftime("%Y-%m-%d")  # ✅ 日期格式
+        timestamp = datetime.fromtimestamp(msg["date"], tz=central_tz).strftime("%Y-%m-%d")
 
         print("🔍 收到来自用户 ID 的消息:", user_id, text, flush=True)
 
-        if text:
-            post = {"timestamp": timestamp, "text": text}
-            if (timestamp, text) not in seen:
-                new_posts.append(post)
-
-        max_update_id = max(max_update_id, update["update_id"])
+        if text and message_id not in seen_ids:
+            post = {"id": message_id, "timestamp": timestamp, "text": text}
+            new_posts.append(post)
 
     if new_posts:
         posts.extend(new_posts)
         posts.sort(key=lambda x: x["timestamp"], reverse=True)
         save_posts(posts)
 
-    save_offset(max_update_id)
     print(f"✅ 新增 {len(new_posts)} 条消息", flush=True)
 
 if __name__ == "__main__":
