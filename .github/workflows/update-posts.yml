@@ -2,7 +2,7 @@ name: Update Posts
 
 on:
   schedule:
-    - cron: '0 * * * *'  # 每小时运行一次
+    - cron: '*/15 * * * *'  # ⏱ 每 15 分钟运行一次
   workflow_dispatch:
 
 jobs:
