@@ -9,8 +9,7 @@ POSTS_FILE = "posts.json"
 OFFSET_FILE = "last_update_id.txt"
 
 API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
-
-central_tz = timezone("America/Chicago")  # 🕘 达拉斯本地时间
+central_tz = timezone("America/Chicago")  # 🕘 达拉斯时间 CST/CDT 自动转换
 
 def load_offset():
     if os.path.exists(OFFSET_FILE):
@@ -55,7 +54,7 @@ def fetch_messages():
 
         user_id = str(msg.get("from", {}).get("id"))
         text = msg.get("text")
-        timestamp = datetime.fromtimestamp(msg["date"], tz=central_tz).strftime("%Y-%m-%d")  # ✅ 只显示日期
+        timestamp = datetime.fromtimestamp(msg["date"], tz=central_tz).strftime("%Y-%m-%d")  # ✅ 日期格式
 
         print("🔍 收到来自用户 ID 的消息:", user_id, text, flush=True)
 
