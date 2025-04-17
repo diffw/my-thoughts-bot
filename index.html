@@ -1,21 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
-  <meta charset="utf-8">
-  <title>我的想法 Feed</title>
+  <meta charset="UTF-8" />
+  <title>My Thoughts</title>
   <style>
-    body { font-family: sans-serif; padding: 1em; max-width: 600px; margin: auto; }
-    .post { border-bottom: 1px solid #ddd; padding: 0.5em 0; }
-    .timestamp { color: gray; font-size: 0.8em; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2em;
+      max-width: 600px;
+      margin: auto;
+      background-color: #f9f9f9;
+    }
+    .post {
+      background: #fff;
+      padding: 1em;
+      margin-bottom: 1em;
+      border-left: 5px solid #007acc;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .timestamp {
+      font-size: 0.8em;
+      color: #666;
+    }
   </style>
 </head>
 <body>
-  <h1>📜 我的想法</h1>
-  <div id="feed">
-    <div class="post"><div class="timestamp">2025-04-17 02:59:27</div><div>/start</div></div>
-<div class="post"><div class="timestamp">2025-04-17 02:59:30</div><div>Hello</div></div>
-<div class="post"><div class="timestamp">2025-04-17 03:05:20</div><div>哈哈。太棒了。差不多了1小时，上线了一个机器人。</div></div>
-<!-- POST_PLACEHOLDER -->
-  </div>
+  <h1>📝 我的想法 Feed</h1>
+  <div id="feed">加载中...</div>
+
+  <script>
+    fetch("posts.json")
+      .then((res) => res.json())
+      .then((posts) => {
+        const container = document.getElementById("feed");
+        container.innerHTML = "";
+        posts.forEach(({ timestamp, text }) => {
+          const div = document.createElement("div");
+          div.className = "post";
+          div.innerHTML = `<div class="timestamp">${timestamp}</div><div>${text}</div>`;
+          container.appendChild(div);
+        });
+      })
+      .catch((err) => {
+        document.getElementById("feed").textContent = "❌ 无法加载内容：" + err;
+      });
+  </script>
 </body>
 </html>
