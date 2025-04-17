@@ -50,6 +50,7 @@ def fetch_messages():
     max_update_id = offset or 0
 
     for update in updates:
+        print("📦 update 原始内容:", json.dumps(update, ensure_ascii=False), flush=True)
         msg = update.get("message")
         if not msg:
             continue
