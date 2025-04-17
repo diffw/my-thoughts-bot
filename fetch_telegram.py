@@ -45,6 +45,7 @@ def fetch_messages():
     max_update_id = offset or 0
 
     for update in updates:
+        print("📦 update 原始内容:", json.dumps(update, ensure_ascii=False), flush=True)
         msg = update.get("message")
         if not msg:
             continue
@@ -53,8 +54,7 @@ def fetch_messages():
         text = msg.get("text")
         timestamp = datetime.utcfromtimestamp(msg["date"]).strftime("%Y-%m-%d %H:%M:%S")
 
-        # ✅ 打印出来每一条消息的来源用户 ID 和内容
-        print("👤 收到用户 ID:", user_id, "| 内容:", text, flush=True)
+        print("🔍 收到来自用户 ID 的消息:", user_id, text, flush=True)
 
         if user_id == TELEGRAM_USER_ID and text:
             post = {"timestamp": timestamp, "text": text}
