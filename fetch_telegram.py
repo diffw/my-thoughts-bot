@@ -56,7 +56,7 @@ def fetch_messages():
 
         print("🔍 收到来自用户 ID 的消息:", user_id, text, flush=True)
 
-        if user_id == TELEGRAM_USER_ID and text:
+        if text:
             post = {"timestamp": timestamp, "text": text}
             if (timestamp, text) not in seen:
                 new_posts.append(post)
