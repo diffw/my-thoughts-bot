@@ -44,12 +44,16 @@ def fetch_messages():
         print("🔍 收到来自用户 ID 的消息:", user_id, text, flush=True)
 
         if text and message_id not in seen_ids:
-            post = {"id": message_id, "timestamp": timestamp, "text": text}
+            post = {
+                "id": message_id,
+                "timestamp": timestamp,
+                "text": text
+            }
             new_posts.append(post)
 
     if new_posts:
         posts.extend(new_posts)
-        posts.sort(key=lambda x: x["timestamp"], reverse=True)
+        posts.sort(key=lambda x: (x["timestamp"], x["id"]), reverse=True)
         save_posts(posts)
 
     print(f"✅ 新增 {len(new_posts)} 条消息", flush=True)
