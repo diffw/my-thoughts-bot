@@ -1,24 +1,23 @@
 import json
 
-# ✅ 加载旧内容
-with open("posts.json", "r", encoding="utf-8") as f:
+POSTS_FILE = "posts.json"
+EXCLUDED_TEXTS = {"定时添加：你好！"}  # 可以继续加入其他想屏蔽的内容
+
+# 读取现有内容
+with open(POSTS_FILE, "r", encoding="utf-8") as f:
     posts = json.load(f)
 
-# ✅ 过滤掉默认消息
-posts = [p for p in posts if p["text"] != "定时添加：你好！"]
-
-# ✅ 按 id 去重（如果你担心手动改动引入重复）
-seen_ids = set()
-unique_posts = []
+# 去重（后出现的覆盖前面的）
+unique = {}
 for post in posts:
-    pid = post.get("id")
-    if pid and pid not in seen_ids:
-        unique_posts.append(post)
-        seen_ids.add(pid)
+    if post["text"] not in EXCLUDED_TEXTS:
+        unique[post["id"]] = post
 
-# ✅ 按时间排序（降序）
-unique_posts.sort(key=lambda x: (x.get("timestamp"), x.get("id")), reverse=True)
+# 重新排序（按日期降序）
+sorted_posts = sorted(unique.values(), key=lambda x: x["timestamp"], reverse=True)
 
-# ✅ 写回文件
-with open("posts.json", "w", encoding="utf-8") as f:
-    json.dump(unique_posts, f, indent=2, ensure_ascii=False)
+# 写入
+with open(POSTS_FILE, "w", encoding="utf-8") as f:
+    json.dump(sorted_posts, f, indent=2, ensure_ascii=False)
+
+print(f"✅ 清理完成，当前共 {len(sorted_posts)} 条消息。")
